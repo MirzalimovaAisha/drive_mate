@@ -1,3 +1,3 @@
 import 'package:flutter/material.dart';
 
-const BROWNCOLOR = Color(0xFFBF8273);
+const brownColor = Color(0xFFBF8273);

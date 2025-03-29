@@ -1,3 +1,6 @@
+import 'package:drive_mate/screens/bottom_navi_screen.dart';
+import 'package:drive_mate/screens/car_selection_screen.dart';
+import 'package:drive_mate/screens/sign_in_screen.dart';
 import 'package:drive_mate/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -14,6 +17,11 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const SplashScreen(),
+      routes: {
+        '/sign_in': (context) => SignInScreen(),
+        '/car_selection': (context) => CarSelectionScreen(),
+        '/bottom_navi': (context) => BottomNaviScreen(),
+      },
     );
   }
 }
