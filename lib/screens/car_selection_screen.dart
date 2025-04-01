@@ -1,8 +1,12 @@
 import 'package:drive_mate/consts/color.dart';
+import 'package:drive_mate/data/controller/car_service.dart';
 import 'package:drive_mate/screens/bottom_navi_screen.dart';
 import 'package:drive_mate/widgets/button_widget.dart';
+import 'package:drive_mate/widgets/text_field_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 
 class CarSelectionScreen extends StatefulWidget {
   const CarSelectionScreen({super.key});
@@ -12,6 +16,53 @@ class CarSelectionScreen extends StatefulWidget {
 }
 
 class _CarSelectionScreenState extends State<CarSelectionScreen> {
+  final TextEditingController _carNameController = TextEditingController();
+  final TextEditingController _carNumController = TextEditingController();
+  final CarService _carService = CarService();
+
+  void _handleCar()async{
+    final carName =  _carNameController.text.trim();
+    final carNum = _carNumController.text.trim();
+
+    if (carName.isEmpty || carNum.isEmpty || _selectedImage == null){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('모든 빌드를 입력해주세요'))
+      );
+      print('모든 빌드를 입력해주세요');
+      return;
+    }
+    try{
+      Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => BottomNaviScreen())
+      );
+    } catch(e){
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('차량 등록 실패'))
+      );
+      print('차량 등록 실패');
+    }
+  }
+
+
+
+  /// ============= 이미지 업로드 ===================
+  File? _selectedImage;
+  final ImagePicker _picker = ImagePicker();
+
+  Future<void> _pickImage(ImageSource source) async {
+    final XFile? pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = File(pickedFile.path);
+      });
+    }
+  }
+  /// ==============================================
+
+
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,58 +124,44 @@ class _CarSelectionScreenState extends State<CarSelectionScreen> {
                                 const SizedBox(height: 30,),
 
                                 //  ========== 차량 이름 ==================
-                                  Container(
-                                    width: double.infinity,
-                                    height: 45,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    decoration: BoxDecoration(
-                                        color: Color(0xfff8f8f8),
-                                        borderRadius: BorderRadius.circular(7)
-                                    ),
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: '차량 이름',
-                                          hintStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-                                          prefixIcon: Icon(Icons.directions_car_outlined, size: 35,),
-                                          prefixIconColor: Colors.black
-                                      ),
-                                    ),
+                                  TextFieldWidget(
+                                    text: '차량 이름',
+                                    icon: Icon(Icons.directions_car_outlined, color: Colors.black, size: 35,),
+                                    controller: _carNameController,
                                   ),
-
                                   const SizedBox(height: 10,),
-                                  //  ========== 차량 이름 ==================
-                                  Container(
-                                    width: double.infinity,
-                                    height: 45,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    decoration: BoxDecoration(
-                                        color: Color(0xfff8f8f8),
-                                        borderRadius: BorderRadius.circular(7)
-                                    ),
-                                    child: TextField(
-                                      decoration: InputDecoration(
-                                          border: InputBorder.none,
-                                          hintText: '차량 번호',
-                                          hintStyle: TextStyle(color: Colors.grey, fontWeight: FontWeight.w500),
-                                          prefixIcon: Icon(Icons.pin_outlined, size: 35,),
-                                          prefixIconColor: Colors.black
-                                      ),
-                                    ),
+
+                                  //  ========== 차량 번호 ==================
+                                  TextFieldWidget(
+                                    text: '차량 번호',
+                                    icon: Icon(Icons.pin_outlined, color: Colors.black, size: 35,),
+                                    controller: _carNumController,
                                   ),
 
                                   const SizedBox(height: 10,),
 
                                   // ============= 이미지 ==============
-                                  Container(
-                                    width: double.infinity,
-                                    height: 150,
-                                    color: Color(0xffeeeeee),
-                                    child: Center(
-                                      child: Icon(Icons.image_outlined, size: 40),
+                                  InkWell(
+                                    onTap: _showImagePickerOptions,
+                                    child: Container(
+                                      width: double.infinity,
+                                      height: 150,
+                                      decoration: BoxDecoration(
+                                        color: Color(0xffeeeeee),
+                                        image: _selectedImage != null
+                                            ? DecorationImage(
+                                          image: FileImage(_selectedImage!),
+                                          fit: BoxFit.contain,
+                                        )
+                                            : null,
+                                      ),
+                                      child: _selectedImage == null
+                                          ? Icon(Icons.image_outlined, size: 40)
+                                          : null,
                                     ),
                                   ),
 
+                                  // ======================================
                                   const SizedBox(height: 10,),
                                   Text(
                                     textAlign: TextAlign.center,
@@ -137,9 +174,10 @@ class _CarSelectionScreenState extends State<CarSelectionScreen> {
                                   ),
                                   const SizedBox(height: 30,),
                                   ButtonWidget(
-                                    onPressed: (){
+                                    onPressed: () async{
+                                      // _handleCar;
                                       Navigator.pushReplacement(
-                                          context, 
+                                          context,
                                           MaterialPageRoute(builder: (context) => BottomNaviScreen())
                                       );
                                     },
@@ -163,4 +201,35 @@ class _CarSelectionScreenState extends State<CarSelectionScreen> {
       ),
     );
   }
+
+  void _showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return SafeArea(
+          child: Wrap(
+            children: <Widget>[
+              ListTile(
+                leading: Icon(Icons.photo_library),
+                title: Text('갤러리에서 선택'),
+                onTap: () {
+                  _pickImage(ImageSource.gallery);
+                  Navigator.of(context).pop();
+                },
+              ),
+              ListTile(
+                leading: Icon(Icons.camera_alt),
+                title: Text('카메라로 촬영'),
+                onTap: () {
+                  _pickImage(ImageSource.camera);
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 }
